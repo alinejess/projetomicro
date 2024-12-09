@@ -1,6 +1,4 @@
 // aline jéssica david gonçalves
-// teste de integração arduino + teclado
-
 // bibliotecas integração anterior
 #include <SPI.h>                            // biblioteca do sensor
 #include <MFRC522.h>                        // biblioteca do sensor também
