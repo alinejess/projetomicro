@@ -5,6 +5,8 @@
 // 9 dele 4 meu
 // 567 meu
 
+
+// inicializa os pinos com os valores correspondentes
 const int PINO_SENSOR_S0 = 3;
 const int PINO_SENSOR_S1 = 4;
 const int PINO_SENSOR_S2 = 7;
@@ -19,6 +21,7 @@ int vermelho = 0;
 int verde = 0;
 int azul = 0;
 
+// cria o enum para acompanhar o estado do programa
 enum Estado {
   bota = 0,
   tira = 1,
@@ -31,12 +34,12 @@ Servo meuServo;
 
 void setup() {
   Serial.begin(9600);
-
+  //inicializa os pinos do braço mecanico
   for (int pino = 22; pino < 33; pino++) {
     pinMode(pino, OUTPUT);
     digitalWrite(pino, HIGH);
   }
-
+  // inicializa os pinos do sensor 
   pinMode(PINO_SENSOR_S0, OUTPUT);
   pinMode(PINO_SENSOR_S1, OUTPUT);
   pinMode(PINO_SENSOR_S2, OUTPUT);
@@ -55,27 +58,23 @@ void setup() {
   meuServo.write(0);
 }
 unsigned long instanteAnterior = 0;
-int angulo = 0;
-int anguloDestino = 0;
 
 void loop() {
-
- 
 
   if (Serial.available() > 0) {
     String texto = Serial.readStringUntil('\n');
     texto.trim();
-    if (texto == "Gira servo") {
-      estado = 0;
+    if (texto == "Gira servo") { // se o texto for gira servo, gira o servo motor em 75 graus
+      estado = 0; //definimos o estado como 0, no switch a seguir.
       delay(1000);
       meuServo.write(75);
-    } else if (texto == "Volta servo") estado = 1;
+    } else if (texto == "Volta servo") estado = 1; // após girar o servo motor em 75 graus, giramos ele de volta para a posição inicial.
     else {
-      le_senha(texto);
-      estado = 2;
+      le_senha(texto); // chamamos a função auxiliar que chama os pinos do braço mecanico e, com o suporte de reles, inserimos a senha desejada (texto).
+      estado = 2; //definimos o estado como 2, no switch a seguir.
       if (texto == "6969" || texto == "1967" || texto == "0002") {
-        liga_verde();
-        estado = 3;
+        liga_verde(); // caso a senha seja uma dessas (3 senhas certas), ligamos o led verde.
+        estado = 3; //definimos o estado como 3, no switch a seguir.
       } else {
         estado = 3;
       }
@@ -84,7 +83,7 @@ void loop() {
 
   Serial.println(vermelho);
   Serial.println(verde);
-  if (vermelho > 100 && verde < 100) {
+  if (vermelho > 100 && verde < 100) {  // para termos um melhor controle dos valores dos leds, printamos na Serial.
     Serial.println("Vermelho detectado!");
   } else if (verde > 100 && vermelho < 100) {
     Serial.println("Verde detectado!");
@@ -94,14 +93,10 @@ void loop() {
 
   delay(500);
 
-  // digitalWrite(32, LOW);
-  // delay(400);
-  // digitalWrite(32, HIGH);
-
   switch (estado) {
 
     case 0:
-      Serial.println("Lendo o chip...");
+      Serial.println("Lendo o chip..."); // quando o estado for 0, lemos o chip, com o servo motor sendo girado para 75 graus
       desliga();
       if (millis() - instanteAnterior >= 4000) {
         instanteAnterior = millis();
@@ -110,7 +105,7 @@ void loop() {
       break;
 
     case 1:
-      Serial.println("Chip lido!");
+      Serial.println("Chip lido!"); // quando o estado for 1, voltamos o servo motor para a posição inicial.
       delay(1000);
       meuServo.write(0);
       if (millis() - instanteAnterior >= 2000) {
@@ -119,45 +114,37 @@ void loop() {
       break;
 
     case 2:
-      Serial.println("Insira a senha:");
-
-      // if (millis() - instanteAnterior >= 10000) {
-      //   Serial.println("Tempo esgotado!");
-      //   liga_vermelho();
-      //   estado = 3;
-      //   instanteAnterior = millis();
-      // }
+      Serial.println("Insira a senha:"); // no estado 2, inserimos a senha.
       break;
 
     case 3:
 
-      leitura_cores();
-      
-
-      Serial.println(String(vermelho) + " " + String(verde));
+      leitura_cores(); // chamamos a função auxiliar para ler as cores e detectar o valor delas a partir do pulseIn.
+  
+      Serial.println(String(vermelho) + " " + String(verde)); // fazemos um print na Serial para verificarmos o estado das variáveis
 
       if (millis() - instanteAnterior >= 5000) {
-        Serial.println("Senha incorreta!");
-        estado = 0;
+        Serial.println("Senha incorreta!");  // caso o tempo de inserir a senha ultrapasse 5 segundos, exibimos a mensagem de segurança senha incorreta
+        estado = 0; // após isso, voltamos o estado para 0 e reiniciamos o programa.
       }
 
       //if (vermelho > 15 && verde < 10) {
       if (vermelho > verde + 5) {
-        Serial.println("Senha incorreta!");
+        Serial.println("Senha incorreta!"); // caso o sensor detecte o valor de vermelho sendo 5 unidades maior que o verde, detectamos que a senha está incorreta.
 
         delay(1000);
-        estado = 0;
+        estado = 0; // como a senha está correta, voltamos para o estado inicial e repetimos todo o processo
         instanteAnterior = millis();
       }
 
 
       //else if (verde > 6 && vermelho < 6) {
       else if (verde > vermelho) {
-        Serial.println("Senha correta!");
+        Serial.println("Senha correta!"); // quando o valor de verde for maior que o vermelho no led, detectamos que a senha está correta
         delay(1000);
         instanteAnterior = millis();
         estado = 0;
-        return;
+        return; // retornamos e saímos dessa etapa.
       }
       break;
   }
@@ -170,34 +157,34 @@ void leitura_cores() {
   digitalWrite(PINO_SENSOR_S2, LOW);  // Pino S2 em nível baixo
   digitalWrite(PINO_SENSOR_S3, LOW);  // Pino S3 em nível baixo
 
-  verde = pulseIn(PINO_SENSOR_OUT, LOW);
+  verde = pulseIn(PINO_SENSOR_OUT, LOW); // usamos a função pulseIn para lermos o valor de verde segundo o sensor RGB TCS230
 
   // Leitura da cor verde
   digitalWrite(PINO_SENSOR_S2, HIGH);  // Pino S2 em nível alto
   digitalWrite(PINO_SENSOR_S3, HIGH);  // Pino S3 em nível alto
 
-  vermelho = pulseIn(PINO_SENSOR_OUT, LOW);
+  vermelho = pulseIn(PINO_SENSOR_OUT, LOW); // usamos a função pulseIn para lermos o valor de vermelho segundo o sensor RGB TCS230
 }
 
-void liga_verde() {
+void liga_verde() { // função auxiliar para ligarmos o led na cor verde
   digitalWrite(PINO_LED_VERDE, HIGH);
   digitalWrite(PINO_LED_AZUL, LOW);
   digitalWrite(PINO_LED_VERMELHO, LOW);
 }
 
-void liga_vermelho() {
+void liga_vermelho() { // função auxiliar para ligarmos o led na cor vermelha
   digitalWrite(PINO_LED_VERDE, LOW);
   digitalWrite(PINO_LED_AZUL, LOW);
   digitalWrite(PINO_LED_VERMELHO, HIGH);
 }
 
-void desliga() {
+void desliga() { // função auxiliar para desligarmos o led
   digitalWrite(PINO_LED_VERDE, LOW);
   digitalWrite(PINO_LED_AZUL, LOW);
   digitalWrite(PINO_LED_VERMELHO, LOW);
 }
 
-void le_senha(String k) {
+void le_senha(String k) { // função auxiliar para utilizarmos o braço mecanico com relés para inserir a senha automaticamente.
   int t = k.length();
   for (int i = 0; i < t; i++) {
     char x = k[i];
