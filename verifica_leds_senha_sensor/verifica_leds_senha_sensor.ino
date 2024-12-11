@@ -13,7 +13,7 @@ const int PINO_SENSOR_S2 = 7;
 const int PINO_SENSOR_S3 = 6;
 const int PINO_SENSOR_OUT = 5;
 
-const int PINO_LED_VERDE = 2;
+const int PINO_LED_VERDE = 10;
 const int PINO_LED_AZUL = 8;
 const int PINO_LED_VERMELHO = 9;
 
